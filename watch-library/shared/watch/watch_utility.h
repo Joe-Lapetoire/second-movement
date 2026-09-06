@@ -29,7 +29,7 @@
 /*
  * Define use_iso_8601_weeknumber as 1 to let weeknumbers start on Monday, 0 to start on Sunday.
  */
-#define use_iso_8601_weeknumber 0
+#define use_iso_8601_weeknumber 1
 
 #include "watch.h"
 
