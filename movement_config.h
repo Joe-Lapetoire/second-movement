@@ -28,7 +28,6 @@
 #include "movement_faces.h"
 
 const watch_face_t watch_faces[] = {
-    clock_face,
     clock_date_face,
     countdown_face,
     timer_face,
