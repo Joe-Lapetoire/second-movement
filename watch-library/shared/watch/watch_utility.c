@@ -289,7 +289,6 @@ watch_duration_t watch_utility_seconds_to_duration(uint32_t seconds) {
     retval.minutes = (seconds % 3600) / 60;
     retval.hours = (seconds % 86400) / 3600;
     retval.days = seconds / 86400;
-t
     return retval;
 }
 
