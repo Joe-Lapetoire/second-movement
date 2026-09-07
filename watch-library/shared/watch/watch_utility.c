@@ -37,7 +37,7 @@ const char * watch_utility_get_long_weekday(watch_date_time_t date_time) {
     return weekdays[watch_utility_get_iso8601_weekday_number(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day) - 1];
 }
 
-// Per ISO8601 week starts on Monday with index 1
+// Per ISO8601 week starts on Monday with index 0
 uint8_t watch_utility_get_iso8601_weekday_number(uint16_t year, uint8_t month, uint8_t day) {
     year -= WATCH_RTC_REFERENCE_YEAR;
     year += 20;
@@ -289,7 +289,7 @@ watch_duration_t watch_utility_seconds_to_duration(uint32_t seconds) {
     retval.minutes = (seconds % 3600) / 60;
     retval.hours = (seconds % 86400) / 3600;
     retval.days = seconds / 86400;
-
+t
     return retval;
 }
 
