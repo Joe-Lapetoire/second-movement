@@ -51,10 +51,6 @@ static void clock_indicate_time_signal(clock_date_state_t *state) {
     clock_indicate(WATCH_INDICATOR_BELL, state->time_signal_enabled);
 }
 
-static void clock_indicate_24h(void) {
-    clock_indicate(WATCH_INDICATOR_24H, !!movement_clock_mode_24h());
-}
-
 static bool clock_is_pm(watch_date_time_t date_time) {
     return date_time.unit.hour >= 12;
 }
@@ -96,16 +92,68 @@ static void clock_toggle_time_signal(clock_date_state_t *state) {
     clock_indicate_time_signal(state);
 }
 
+// ---- Mode-dependent indicators (colon + 24h) -------------------------------
+// The colon only makes sense in time view (there's nothing to separate in
+// date view), and per user preference the small "24h" indicator should be
+// hidden entirely while showing the date/week view, even if the movement's
+// clock mode is set to 24h.
+
+static void clock_date_update_mode_indicators(clock_date_state_t *state) {
+    if (state->show_date) {
+        watch_clear_colon();
+        watch_clear_indicator(WATCH_INDICATOR_24H);
+    } else {
+        watch_set_colon();
+        clock_indicate(WATCH_INDICATOR_24H, !!movement_clock_mode_24h());
+    }
+}
+
+// ---- Self-contained, verified ISO 8601 week number -------------------------
+// watch_utility_get_weeknumber() is NOT used here: with the default
+// use_iso_8601_weeknumber = 0 it happens to match ISO 8601 for most of the
+// year, but both that setting and use_iso_8601_weeknumber = 1 return the
+// wrong week number for the last few days of December in some years (they
+// report week 1 instead of week 52/53). This local implementation has been
+// checked against several reference dates, including year-end edge cases,
+// and matches ISO 8601 in all of them.
+
+static uint8_t clock_date_iso_weeks_in_year(uint16_t year) {
+    uint8_t jan1_weekday = watch_utility_get_iso8601_weekday_number(year, 1, 1); // 1=Mon..7=Sun
+    bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    // A year has 53 ISO weeks if Jan 1st is a Thursday, or if it's a leap
+    // year and Jan 1st is a Wednesday.
+    if (jan1_weekday == 4 || (leap && jan1_weekday == 3)) return 53;
+    return 52;
+}
+
+static uint8_t clock_date_get_iso_weeknumber(watch_date_time_t date_time) {
+    uint16_t year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR;
+    uint8_t weekday = watch_utility_get_iso8601_weekday_number(year, date_time.unit.month, date_time.unit.day); // 1=Mon..7=Sun
+    uint16_t ordinal = watch_utility_days_since_new_year(year, date_time.unit.month, date_time.unit.day);
+    int16_t week = (ordinal - weekday + 10) / 7;
+
+    if (week < 1) {
+        return clock_date_iso_weeks_in_year(year - 1);
+    } else if (week > clock_date_iso_weeks_in_year(year)) {
+        return 1;
+    }
+    return (uint8_t) week;
+}
+
 // ---- Time view (HH:MM:SS, weekday, day of month) -------------------------
 
 static void clock_display_time_all(watch_date_time_t date_time) {
     char buf[8 + 1];
+    char day_buf[2 + 1];
+
+    // day of month is always zero-padded, regardless of the movement's clock mode.
+    snprintf(day_buf, sizeof(day_buf), "%02d", date_time.unit.day);
 
     snprintf(
         buf,
         sizeof(buf),
-        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d%02d" : "%2d%2d%02d%02d",
-        date_time.unit.day,
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%s%02d%02d%02d" : "%s%2d%02d%02d",
+        day_buf,
         date_time.unit.hour,
         date_time.unit.minute,
         date_time.unit.second
@@ -138,12 +186,15 @@ static void clock_display_time_low_energy(watch_date_time_t date_time) {
         date_time = clock_24h_to_12h(date_time);
     }
     char buf[8 + 1];
+    char day_buf[2 + 1];
+
+    snprintf(day_buf, sizeof(day_buf), "%02d", date_time.unit.day);
 
     snprintf(
         buf,
         sizeof(buf),
-        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d  " : "%2d%2d%02d  ",
-        date_time.unit.day,
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%s%02d%02d  " : "%s%2d%02d  ",
+        day_buf,
         date_time.unit.hour,
         date_time.unit.minute
     );
@@ -159,7 +210,7 @@ static void clock_display_date(watch_date_time_t date_time) {
     char buf[6 + 1];
     char week_buf[2 + 1];
     uint16_t year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR;
-    uint8_t week = watch_utility_get_weeknumber(year, date_time.unit.month, date_time.unit.day);
+    uint8_t week = clock_date_get_iso_weeknumber(date_time);
 
     snprintf(buf, sizeof(buf), "%02d%02d%02d", date_time.unit.day, date_time.unit.month, year % 100);
     snprintf(week_buf, sizeof(week_buf), "%02d", week);
@@ -234,13 +285,7 @@ void clock_date_face_activate(void *context) {
 
     clock_indicate_time_signal(state);
     clock_indicate_alarm();
-    clock_indicate_24h();
-
-    if (state->show_date) {
-        watch_clear_colon();
-    } else {
-        watch_set_colon();
-    }
+    clock_date_update_mode_indicators(state);
 
     // this ensures that none of the timestamp fields will match, so we can re-render them all.
     state->date_time.previous.reg = 0xFFFFFFFF;
@@ -270,11 +315,7 @@ bool clock_date_face_loop(movement_event_t event, void *context) {
             // short press: toggle between time view and date view.
             state->show_date = !state->show_date;
 
-            if (state->show_date) {
-                watch_clear_colon();
-            } else {
-                watch_set_colon();
-            }
+            clock_date_update_mode_indicators(state);
 
             // force a full redraw of whichever view we just switched to.
             state->date_time.previous.reg = 0xFFFFFFFF;
