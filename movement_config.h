@@ -30,33 +30,23 @@
 /* The F() below is a trick to be able to get the face as well as its name */
 
 #define PRIMARY_FACES(F) \
-    F(stock_clock) \
-    F(alarm) \
+    F(clock_date) \
+    F(advanced_alarm) \
     F(fast_stopwatch) \
     F(countdown) \
-    F(sunrise_sunset) \
-    F(solar_time) \
-    F(moon_phase)
+    F(counter)
+
 
 #define SECONDARY_FACES(F) \
-    F(totp_lfs) \
-    F(tomato) \
     F(tunes) \
-    F(probability) \
-    F(wordle) \
-    F(counter) \
-    F(tennis)
+    F(voltage) \
+    F(temperature_display)
+
 
 #define TERTIARY_FACES(F) \
     F(settings) \
     F(set_time) \
-    F(page_ordering) \
-    F(temperature_display) \
-    F(pin) \
-    F(voltage) \
     F(rtccount) \
-    F(finetune) \
-    F(nanosec) \
     F(firmware_flasher) \
     F(ir_rx) \
     F(ir_tx)
@@ -65,9 +55,9 @@
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
  */
-#define MOVEMENT_DEFAULT_RED_COLOR 0xF
-#define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
-#define MOVEMENT_DEFAULT_BLUE_COLOR 0xF
+#define MOVEMENT_DEFAULT_RED_COLOR 0x0
+#define MOVEMENT_DEFAULT_GREEN_COLOR 0xC
+#define MOVEMENT_DEFAULT_BLUE_COLOR 0xC
 
 /* Set to true for 24h mode or false for 12h mode */
 #define MOVEMENT_DEFAULT_24H_MODE true
