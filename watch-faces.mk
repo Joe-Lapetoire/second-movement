@@ -7,7 +7,7 @@ SRCS += \
   ./watch-faces/clock/mars_time_face.c \
   ./watch-faces/clock/ish_face.c \
   ./watch-faces/complication/alarm_face.c \
-  ./watch-faces/complication/advanced_alarm_lap_face.c
+  ./watch-faces/complication/advanced_alarm_lap_face.c \
   ./watch-faces/complication/advanced_alarm_face.c \
   ./watch-faces/complication/countdown_face.c \
   ./watch-faces/complication/stopwatch_face.c \
