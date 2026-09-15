@@ -1,13 +1,13 @@
 SRCS += \
   ./watch-faces/clock/clock_face.c \
   ./watch-faces/clock/clock_date_face.c \
-  ./watch-faces/clock/advanced_alarm_lap_face.c \
   ./watch-faces/clock/beats_face.c \
   ./watch-faces/clock/world_clock_face.c \
   ./watch-faces/clock/stock_clock_face.c \
   ./watch-faces/clock/mars_time_face.c \
   ./watch-faces/clock/ish_face.c \
   ./watch-faces/complication/alarm_face.c \
+  ./watch-faces/complication/advanced_alarm_lap_face.c
   ./watch-faces/complication/advanced_alarm_face.c \
   ./watch-faces/complication/countdown_face.c \
   ./watch-faces/complication/stopwatch_face.c \
