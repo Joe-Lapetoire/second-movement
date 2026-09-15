@@ -31,7 +31,7 @@
 
 #define PRIMARY_FACES(F) \
     F(clock_date) \
-    F(advanced_alarm) \
+    F(advanced_alarm_lap) \
     F(fast_stopwatch) \
     F(countdown) \
     F(counter)
